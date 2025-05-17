@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpandrixJS Components Demo</title>
+  <link rel="stylesheet" href="../demo/style.css">
+</head>
+<body>
+  <div id="app">
+    <h1>{{ pageTitle | uppercase }}</h1>
+    <p>{{ intro }}</p>
+
+    <div data-if="!user.isLoggedIn">
+      <input data-model="user.name" placeholder="Enter your name">
+      <button data-on:click="loginUser">Login</button>
+    </div>
+
+    <div data-if="user.isLoggedIn">
+      <my-greeting name="{{ user.name }}" first-name="{{ user.firstName }}" last-name="{{ user.lastName }}">
+        <p>Thanks for logging in!</p>
+      </my-greeting>
+    </div>
+
+    <h2>User List</h2>
+    <ul>
+      <li data-repeat="user, idx in users">
+        {{ idx + 1 }}.
+        <user-profile user="{{ user }}" data-on:promote="handleUserPromotion"></user-profile>
+      </li>
+    </ul>
+
+    <button data-on:click="addUser">Add User</button>
+  </div>
+
+  <script src="../src/templateEngine.js"></script>
+  <script>
+    const engine = new TemplateEngine('#app');
+    engine.enableDebug();
+
+    engine.setGlobalData({ appName: "Spandrix", appVersion: "1.0.0" });
+
+    engine.registerFilter('uppercase', val => String(val).toUpperCase());
+    engine.registerFilter('currency', (val, symbol = '$') => symbol + parseFloat(val).toFixed(2));
+
+    engine.registerComponent('my-greeting', {
+      template: `
+        <div class="greeting">
+          <p>Hello {{ name }}!</p>
+          <p>Full Name: {{ fullName }}</p>
+          <p data-show="excited">Excited to see you!</p>
+          <button data-on:click="toggleExcitement">Toggle Excitement</button>
+          <slot></slot>
+        </div>
+      `,
+      data() {
+        return { name: "Guest", excited: false, firstName: '', lastName: '' };
+      },
+      methods: {
+        toggleExcitement() { this.excited = !this.excited; this.$update(); }
+      },
+      computed: {
+        fullName() { return `${this.firstName} ${this.lastName}`; }
+      },
+      created() { console.log("Greeting created", this.name); },
+      mounted() { console.log("Greeting mounted", this.name); }
+    });
+
+    engine.registerComponent('user-profile', {
+      template: `
+        <div class="profile">
+          <p>Name: {{ user.name }}</p>
+          <input data-model="user.name">
+          <p data-if="user.isAdmin">Admin</p>
+          <p data-if="!user.isAdmin">Standard User</p>
+          <button data-on:click="promoteUser" data-show="!user.isAdmin">Promote</button>
+        </div>
+      `,
+      props: ['user'],
+      methods: {
+        promoteUser() { this.$emit('promote', this.user.id); }
+      }
+    });
+
+    const appData = {
+      pageTitle: "SpandrixJS Components",
+      intro: "This page demonstrates reactive components, slots, filters, and events.",
+      user: {
+        name: "Guest",
+        isLoggedIn: false,
+        firstName: "",
+        lastName: ""
+      },
+      users: [
+        { id: 1, name: "Alice", isAdmin: true },
+        { id: 2, name: "Bob", isAdmin: false }
+      ],
+      loginUser() {
+        if (this.user.name && this.user.name !== "Guest") {
+          this.user.isLoggedIn = true;
+          const [first, last] = this.user.name.split(" ");
+          this.user.firstName = first;
+          this.user.lastName = last || "";
+          engine.applyData(this);
+        }
+      },
+      addUser() {
+        const newId = this.users.length + 1;
+        this.users.push({ id: newId, name: `User ${newId}`, isAdmin: false });
+        engine.applyData(this);
+      },
+      handleUserPromotion(userId) {
+        const user = this.users.find(u => u.id === userId);
+        if (user) {
+          user.isAdmin = true;
+          engine.applyData(this);
+        }
+      }
+    };
+
+    engine.applyData(appData);
+  </script>
+</body>
+</html>
