@@ -195,7 +195,7 @@ Toggles debug logging in the console.
 
 1.  **Include the script:**
     ```html
-    <script src="templateEngine.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/agntperfect/spandrixJS/src/templateEngine.min.js"></script>
     ```
 
 2.  **HTML Structure:**
