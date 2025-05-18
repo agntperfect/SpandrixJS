@@ -75,7 +75,7 @@ SpandrixJS represents the metaphysical bridge between **awareness (data)** and *
 ### 1. Include the Engine
 
 ```html
-<script src="src/templateEngine.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/agntperfect/spandrixJS/src/templateEngine.min.js"></script>
 ```
 
 ### 2. Define HTML Structure
